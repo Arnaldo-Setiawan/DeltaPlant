@@ -1,0 +1,123 @@
+/* Custom styles */
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: #0d1117;
+    margin: 0;
+    padding: 0;
+}
+
+/* The Outer Map Container (The "Big Box" card) */
+.map-card-container {
+    position: relative;
+    max-width: 100%;
+    border-radius: 0.75rem;
+    box-shadow: none;
+    background-color: transparent;
+    
+    display: block;
+    margin: 0;
+    padding: 0;
+    line-height: 0;
+}
+
+/* Inner map container (Holds image and canvas) */
+.map-container {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    cursor: crosshair;
+    transition: width 0.3s, height 0.3s;
+}
+
+/* Map background image */
+#map-background {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+}
+
+.map-canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+/* Tooltip styling */
+.tooltip {
+  position: absolute;
+  visibility: hidden;
+  opacity: 0;
+  transition: opacity 0.3s;
+  background-color: #21262d;
+  color: #fff;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  white-space: nowrap;
+  z-index: 100;
+}
+
+.tool-button:hover .tooltip {
+  visibility: visible;
+  opacity: 1;
+}
+
+/* Modal specific styling */
+#custom-modal.flex {
+    display: flex;
+}
+#import-modal.flex {
+    display: flex;
+}
+
+/* Operator selection buttons are large enough to be clickable dots */
+.icon-selector-item {
+    width: 32px;
+    height: 32px;
+    border-radius: 9999px;
+    border: 3px solid transparent;
+    cursor: pointer;
+    transition: transform 0.1s, border-color 0.2s;
+    /* Flex properties for image centering */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.icon-selector-item.selected {
+    border-color: #1d9bf0;
+    transform: scale(1.2);
+    box-shadow: 0 0 10px rgba(29, 155, 240, 0.8);
+}
+
+/* Styling for the small internal icon images */
+.icon-selector-item img {
+    /* INCREASED SIZE for crispness and masking in the selector UI */
+    width: 30px;
+    height: 30px;
+    object-fit: cover; /* Use cover to fill the area */
+    border-radius: 50%; /* Mask the image to a circle */
+    overflow: hidden;
+}
+
+
+/* Brush Preview Style */
+#brush-preview {
+    position: fixed;
+    border-radius: 9999px;
+    pointer-events: none;
+    z-index: 1000;
+    border: 2px solid;
+    transition: opacity 0.1s;
+}
+
+/* Global fix for the scroll boundary */
+#main-wrapper {
+    /* Sets the height of the wrapper to the full viewport, minus the header. */
+    min-height: calc(100vh - 70px); /* 70px approx height of header */
+    padding-bottom: 24px; /* Maintain bottom padding for margin below content */
+}
