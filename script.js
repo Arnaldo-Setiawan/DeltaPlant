@@ -1,7 +1,7 @@
 // == FIREBASE & AUTH CONFIGURATION ==
 // Paste your Firebase Configuration here
 const USER_PROVIDED_FIREBASE_CONFIG = {
-    apiKey: "AIzaSyDx7EopChu9ChjvY-XHq52Zry0thJ5aMo",
+    apiKey: "AIzaSyDx7EopChu9ChjvY-XHq52Zry0thXJ5aMo",
     authDomain: "deltaplant-14bbb.firebaseapp.com",
     projectId: "deltaplant-14bbb",
     storageBucket: "deltaplant-14bbb.firebasestorage.app",
@@ -623,3 +623,4 @@ window.addEventListener('resize', () => {
 
 // Export the Firebase init function so the HTML can call it after imports
 window.initFirebaseApp = initFirebase;
+
