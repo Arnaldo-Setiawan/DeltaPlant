@@ -325,8 +325,11 @@
                             </button>
                         </div>
                         
-                        <button id="save-map" class="w-full py-1 px-2 bg-green-700 text-white font-semibold rounded-lg hover:bg-green-600 transition focus:outline-none focus:ring-2 focus:ring-green-500 text-xs">
-                            Save Image
+                        <button id="save-plan-btn" class="w-full py-2 px-2 bg-green-700 text-white font-semibold rounded-lg hover:bg-green-600 transition focus:outline-none focus:ring-2 focus:ring-green-500 text-base">
+                            Save Plan to Cloud
+                        </button>
+                        <button id="save-map" class="w-full py-1 px-2 bg-gray-700 text-white font-semibold rounded-lg hover:bg-gray-600 transition focus:outline-none focus:ring-2 focus:ring-gray-500 text-xs">
+                            Save Image (Local)
                         </button>
                         <p class="text-xs text-gray-400 text-center">Saves the plan (Map + Drawings)</p>
                     </div>
@@ -405,16 +408,37 @@
             getFirestore, 
             doc, 
             setDoc, 
-            onSnapshot
+            onSnapshot,
+            getDoc,
+            collection
         } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // --- GLOBAL CONFIGURATION ---
 
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+        
+        // <<< STEP 1: PASTE YOUR FIREBASE CONFIGURATION HERE >>>
+        // Go to your Firebase Console > Project Settings > General > Your Apps.
+        // Copy the config object and replace the one below.
+        const USER_PROVIDED_FIREBASE_CONFIG = {
+            apiKey: "AIzaSyDx7EopChu9ChjvY-XHq52Zry0thXJ5aMo", // E.g., "AIzaSyD-..."
+            authDomain: "deltaplant-14bbb.firebaseapp.com", // E.g., "delta-planner-1234.firebaseapp.com"
+            projectId: "deltaplant-14bbb", // E.g., "delta-planner-1234"
+            storageBucket: "deltaplant-14bbb.firebasestorage.app",
+            messagingSenderId: "1086316459831",
+            appId: "1:1086316459831:web:175f5aa4630b3f161a8cb2",
+            measurementId: "G-NHN46CYTVN"
+        };
+        
+        // If the global config is missing, use the user-provided one.
+        const firebaseConfig = typeof __firebase_config !== 'undefined' 
+            ? JSON.parse(__firebase_config) 
+            : USER_PROVIDED_FIREBASE_CONFIG;
+        
         const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
 
         let auth, db, isLoginView = true;
+        let unsubscribeStrategyData = null; 
 
         // --- DOM Elements ---
         const authUi = document.getElementById('auth-ui');
@@ -430,6 +454,66 @@
         const logoutBtn = document.getElementById('logout-btn');
         const anonUserIdDisplay = document.getElementById('anon-user-id');
         const loggedInUserIdDisplay = document.getElementById('logged-in-user-id');
+        const savePlanBtn = document.getElementById('save-plan-btn'); 
+
+        // --- DATA MANAGEMENT FUNCTIONS ---
+
+        /**
+         * Saves the current strategy state for the authenticated user.
+         */
+        const saveStrategyData = async (userId, data) => {
+            if (!db || !userId) return console.error("Database or User ID missing for save.");
+            
+            try {
+                // Path: /artifacts/{appId}/users/{userId}/strategy_plans/current_plan
+                const docRef = doc(db, `artifacts/${appId}/users/${userId}/strategy_plans`, 'current_plan');
+
+                const mockData = {
+                    map: document.getElementById('map-select').value,
+                    sector: document.getElementById('sector-select').value,
+                    currentDateTime: new Date().toISOString(),
+                    placeholder: data, 
+                };
+
+                await setDoc(docRef, mockData);
+                displayMessage("Strategy plan saved to cloud!", false);
+            } catch (e) {
+                console.error("Error saving document:", e);
+                displayMessage("Error saving plan. Check console for details.", true);
+            }
+        };
+
+        /**
+         * Sets up a real-time listener to load data for the authenticated user.
+         */
+        const loadStrategyData = (userId) => {
+            if (unsubscribeStrategyData) {
+                unsubscribeStrategyData(); 
+            }
+
+            if (!db || !userId) return;
+
+            // Path: /artifacts/{appId}/users/{userId}/strategy_plans/current_plan
+            const docRef = doc(db, `artifacts/${appId}/users/${userId}/strategy_plans`, 'current_plan');
+
+            // Listen for real-time updates
+            unsubscribeStrategyData = onSnapshot(docRef, (docSnap) => {
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    console.log("Plan loaded from Firestore:", data);
+                    
+                    document.getElementById('current-map-display').textContent = data.map || 'N/A';
+                    document.getElementById('current-sector-display').textContent = data.sector || 'N/A';
+                    displayMessage(`Plan for ${data.map} loaded successfully! Last saved: ${new Date(data.currentDateTime).toLocaleTimeString()}`, false);
+
+                } else {
+                    console.log("No saved plan found for this user.");
+                    displayMessage("No previous plan found. Start a new one!", true);
+                }
+            }, (e) => {
+                console.error("Firestore Listener Error:", e.message);
+            });
+        };
 
         // --- UTILITY FUNCTIONS ---
 
@@ -510,9 +594,12 @@
             if (auth) {
                 try {
                     await signOut(auth);
+                    if (unsubscribeStrategyData) {
+                        unsubscribeStrategyData(); 
+                        unsubscribeStrategyData = null;
+                    }
                     console.log("Logged out.");
                     clearMessages();
-                    // UI handled by onAuthStateChanged
                 } catch (e) {
                     console.error("Logout failed:", e);
                 }
@@ -522,8 +609,9 @@
         // --- FIREBASE INITIALIZATION & STATE LISTENER ---
 
         const initFirebase = () => {
-            if (Object.keys(firebaseConfig).length === 0) {
-                displayMessage("ERROR: Firebase configuration is missing.", true);
+            // Validate user config before initializing
+            if (!firebaseConfig.apiKey || !firebaseConfig.projectId || firebaseConfig.apiKey.includes("YOUR_")) {
+                displayMessage("ERROR: Firebase configuration is missing or incomplete. Please paste your keys into the USER_PROVIDED_FIREBASE_CONFIG object in the script block.", true);
                 return;
             }
 
@@ -532,7 +620,6 @@
                 auth = getAuth(app);
                 db = getFirestore(app);
 
-                // Initial authentication attempt
                 const attemptAuth = async () => {
                     try {
                         if (initialAuthToken) {
@@ -551,18 +638,30 @@
                 // Set up Auth State Listener
                 onAuthStateChanged(auth, (user) => {
                     if (user && !user.isAnonymous) {
-                        // Logged in with a permanent account (Email/Password)
+                        // Permanent Account Logged In
                         authUi.classList.add('hidden');
                         mainWrapper.classList.remove('hidden');
                         loggedInUserIdDisplay.textContent = user.email;
-                        // You can now use user.uid to load and save user-specific planner data
+                        loadStrategyData(user.uid); 
+                        
+                        savePlanBtn.disabled = false;
+                        savePlanBtn.textContent = 'Save Plan to Cloud';
+
                     } else if (user && user.isAnonymous) {
-                        // Only logged in anonymously
-                        authUi.classList.classList.remove('hidden');
+                        // Anonymous User Logged In
+                        authUi.classList.remove('hidden');
                         mainWrapper.classList.add('hidden');
                         anonUserIdDisplay.textContent = user.uid || 'N/A';
+                        
+                        savePlanBtn.disabled = true;
+                        savePlanBtn.textContent = 'Save Plan (Login Required)';
+                        
+                        if (unsubscribeStrategyData) {
+                            unsubscribeStrategyData();
+                            unsubscribeStrategyData = null;
+                        }
                     } else {
-                        // Logged out
+                        // Logged Out
                         authUi.classList.remove('hidden');
                         mainWrapper.classList.add('hidden');
                     }
@@ -574,6 +673,18 @@
                 authForm.addEventListener('submit', handleAuthAction);
                 authToggleBtn.addEventListener('click', toggleView);
                 logoutBtn.addEventListener('click', handleLogout);
+                
+                // Attach save button event listener
+                savePlanBtn.addEventListener('click', () => {
+                    const user = auth.currentUser;
+                    if (user && !user.isAnonymous) {
+                        // Pass mock data for demonstration
+                        saveStrategyData(user.uid, "Mock state data");
+                    } else {
+                        displayMessage("Please log in with a permanent account to save your plan.", true);
+                    }
+                });
+
 
             } catch (e) {
                 displayMessage(`Firebase Init Error: ${e.message}`, true);
@@ -584,7 +695,7 @@
         document.addEventListener('DOMContentLoaded', initFirebase);
 
         // --- Placeholder functions for map logic (to prevent errors in existing HTML) ---
-        // NOTE: You need to implement the actual canvas drawing, undo/redo, and data saving logic here.
+        // These are mocks for your future planner logic.
         document.getElementById('map-select').innerHTML = '<option value="">Select Map</option><option value="map1">Space City</option>';
         document.getElementById('sector-select').innerHTML = '<option value="">Select Sector</option><option value="sectorA">Sector Alpha</option>';
         document.getElementById('sequence-select').innerHTML = '<option value="">Select Sequence</option><option value="seq1">Phase 1: Entry</option>';
