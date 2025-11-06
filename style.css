@@ -121,3 +121,18 @@ body {
     min-height: calc(100vh - 70px); /* 70px approx height of header */
     padding-bottom: 24px; /* Maintain bottom padding for margin below content */
 }
+
+/* --- NEW LOGIN SYSTEM STYLES --- */
+
+/* Ensure #login-container uses flex for centering when not hidden */
+#login-container {
+    /* Tailwind classes (fixed inset-0 flex) handle the basic layout, 
+       but this ensures behavior if Tailwind is delayed/missing classes. */
+    display: none; 
+    /* The main app wrapper starts hidden, only unhidden on successful login */
+}
+
+/* Force display: flex when the 'hidden' class is removed by JavaScript */
+#login-container:not(.hidden) {
+    display: flex;
+}
