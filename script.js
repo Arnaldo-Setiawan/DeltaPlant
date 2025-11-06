@@ -1,40 +1,30 @@
-// == FIREBASE & AUTH CONFIGURATION ==
-// Paste your Firebase Configuration here
-const USER_PROVIDED_FIREBASE_CONFIG = {
-    apiKey: "AIzaSyDx7EopChu9ChjvY-XHq52Zry0thXJ5aMo",
-    authDomain: "deltaplant-14bbb.firebaseapp.com",
-    projectId: "deltaplant-14bbb",
-    storageBucket: "deltaplant-14bbb.firebasestorage.app",
-    messagingSenderId: "1086316459831",
-    appId: "1:1086316459831:web:175f5aa4630b3f161a8cb2",
-    measurementId: "G-NHN46CYTVN"
-};
+// == LOGIN CONFIGURATION (New) ==
+const ADMIN_USERNAME = 'admin';
+const ADMIN_PASSWORD = '12321'; // WARNING: This is INSECURE for production use!
 
-// Global Firebase/Auth/DB variables
-let auth, db, isLoginView = true;
-let unsubscribeStrategyData = null; 
-const appId = 'deltaplant-14bbb'; // Using projectId as appId placeholder
-
-// --- Firebase Imports (These would be handled in the HTML import, but kept here for logical clarity) ---
-// Note: When running in a browser environment, you'd rely on the imports in the <script type="module"> tag.
+// == FIREBASE & AUTH CONFIGURATION (All removed/commented out) ==
+// const USER_PROVIDED_FIREBASE_CONFIG = { ... };
+// let auth, db, isLoginView = true;
+// let unsubscribeStrategyData = null;
+// const appId = 'deltaplant-14bbb';
 
 // --- Planner Constants (Copied from your provided code) ---
 const ANIMATION_DURATION = 500; // ms
 const PLACEHOLDER_MAP_IMAGE = "https://placehold.co/1280x720/161b22/c9d1d9?text=Map+Image+Goes+Here";
 
 const MAPS = [
-    { 
-        name: "Trenchline", 
+    { 
+        name: "Trenchline", 
         sectors: [
-            { name: "A", url: './TrenchlineA.png' }, 
-            { name: "B", url: './TrenchlineB.png' }, 
-            { name: "C", url: './TrenchlineC.png' }, 
+            { name: "A", url: './TrenchlineA.png' }, 
+            { name: "B", url: './TrenchlineB.png' }, 
+            { name: "C", url: './TrenchlineC.png' }, 
             { name: "D", url: './TrenchlineD.png' },
             { name: "E", url: './TrenchlineE.png' }
         ]
     },
-    { 
-        name: "Ascension", 
+    { 
+        name: "Ascension", 
         sectors: [
             { name: "A", url: './ascensiona.png' },
             { name: "B", url: './ascensionb.png' },
@@ -42,24 +32,24 @@ const MAPS = [
             { name: "D", url: './ascenciond.png' }
         ]
     },
-    { 
-        name: "Cracked", 
+    { 
+        name: "Cracked", 
         sectors: [
             { name: "A", url: './crackeda.png' },
             { name: "B", url: './crackedb.png' },
             { name: "C", url: './crackedc.png' }
         ]
     },
-    { 
-        name: "Threshold", 
+    { 
+        name: "Threshold", 
         sectors: [
             { name: "A", url: './thresholda.png' },
             { name: "B", url: './thresholdb.png' },
             { name: "C", url: './thresholdc.png' }
         ]
     },
-    { 
-        name: "Cyclone", 
+    { 
+        name: "Cyclone", 
         sectors: [
             { name: "A", url: './cyclonea.png' },
             { name: "B", url: './cycloneb.png' },
@@ -68,16 +58,16 @@ const MAPS = [
             { name: "E", url: './cyclonee.png' }
         ]
     },
-    { 
-        name: "Fault", 
+    { 
+        name: "Fault", 
         sectors: [
             { name: "A", url: './faulta.png' },
             { name: "B", url: './faultb.png' },
             { name: "C", url: './faultc.png' }
         ]
     },
-    { 
-        name: "Trainwreck", 
+    { 
+        name: "Trainwreck", 
         sectors: [
             { name: "A", url: './trainwrecka.png' },
             { name: "B", url: './trainwreckb.png' },
@@ -163,6 +153,7 @@ let currentMapIndex = 0;
 let currentSectorName = "";
 let mapNaturalWidth = 0;
 let mapNaturalHeight = 0;
+let isLoggedIn = false; // NEW LOGIN STATE VARIABLE
 
 // == TOOL STATE ==
 let isDrawing = false;
@@ -178,21 +169,17 @@ let mapLoaded = false;
 let selectedIcon = SELECTABLE_ICONS[0]; 
 let defaultText = 'LABEL'; 
 
-// == DOM ELEMENTS ==
-const authUi = document.getElementById('auth-ui');
-const mainWrapper = document.getElementById('main-wrapper');
-const authForm = document.getElementById('auth-form');
-const authEmail = document.getElementById('auth-email');
-const authPassword = document.getElementById('auth-password');
-const authActionBtn = document.getElementById('auth-action-btn');
-const authToggleBtn = document.getElementById('auth-toggle-btn');
-const authTitle = document.getElementById('auth-title');
-const passwordHint = document.getElementById('password-hint');
-const authMessageBox = document.getElementById('auth-message-box');
-const logoutBtn = document.getElementById('logout-btn');
-const anonUserIdDisplay = document.getElementById('anon-user-id');
-const loggedInUserIdDisplay = document.getElementById('logged-in-user-id');
-const savePlanBtn = document.getElementById('save-plan-btn'); 
+// == DOM ELEMENTS (Updated for new login UI) ==
+const appWrapper = document.getElementById('app-wrapper'); // New main app wrapper
+const loginContainer = document.getElementById('login-container');
+const loginForm = document.getElementById('login-form');
+const usernameInput = document.getElementById('username');
+const passwordInput = document.getElementById('password');
+const loginButton = document.getElementById('login-button');
+const loginMessageBox = document.getElementById('login-message-box');
+const logoutButton = document.getElementById('logout-button'); // Added to sidebar
+
+// Removed old Firebase UI elements: authUi, authForm, authEmail, authPassword, etc.
 
 const mapSelect = document.getElementById('map-select');
 const sectorSelect = document.getElementById('sector-select');
@@ -234,21 +221,21 @@ const importModalCancelButton = document.getElementById('import-modal-cancel');
 const importModalActionButton = document.getElementById('import-modal-action');
 
 // =========================================================================
-// 0. UTILITY FUNCTIONS (INCLUDING FIREBASE/AUTH)
+// 0. UTILITY FUNCTIONS (INCLUDING LOGIN/LOGOUT)
 // =========================================================================
 
 function displayMessage(message, isError) {
-    authMessageBox.textContent = message;
-    authMessageBox.classList.remove('hidden', 'bg-red-100', 'text-red-800', 'bg-green-100', 'text-green-800');
+    loginMessageBox.textContent = message;
+    loginMessageBox.classList.remove('hidden', 'bg-red-700', 'bg-green-700');
     if (isError) {
-        authMessageBox.classList.add('bg-red-100', 'text-red-800');
+        loginMessageBox.classList.add('bg-red-700');
     } else {
-        authMessageBox.classList.add('bg-green-100', 'text-green-800');
+        loginMessageBox.classList.add('bg-green-700');
     }
 }
 
-function clearMessages() {
-    authMessageBox.classList.add('hidden');
+function clearLoginMessages() {
+    loginMessageBox.classList.add('hidden');
 }
 
 function getCanvasCoords(e) {
@@ -271,146 +258,63 @@ function hexToRgba(hex, alpha = 1.0) {
     return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
 
-// --- FIREBASE FUNCTIONS ---
+// --- LOGIN/LOGOUT HANDLERS (Replaces Firebase Auth) ---
 
 /**
- * Saves the complete planner state (planningData) for the authenticated user to Firestore.
+ * Toggles the visibility of the login screen vs. the main app.
  */
-const saveStrategyData = async (userId) => {
-    // 1. Ensure the CURRENT state is saved into the active sequence slot before saving to cloud
-    if (planningData[currentMapKey] && planningData[currentMapKey][currentSequenceId]) {
-        planningData[currentMapKey][currentSequenceId].icons = JSON.parse(JSON.stringify(placedIcons));
-        planningData[currentMapKey][currentSequenceId].lineData = lineBuffer.toDataURL();
-        planningData[currentMapKey][currentSequenceId].textData = JSON.parse(JSON.stringify(placedText));
-    }
-
-    if (!db || !userId) return console.error("Database or User ID missing for save.");
-    
-    try {
-        const docRef = doc(db, `artifacts/${appId}/users/${userId}/strategy_plans`, 'current_plan');
-
-        const fullStateData = {
-            version: 1.2,
-            mapIndex: currentMapIndex,
-            sectorUrl: mapBackground.src,
-            sectorName: currentSectorName,
-            currentSequenceId: currentSequenceId,
-            currentTool: currentTool,
-            currentLineWidth: currentLineWidth,
-            currentColor: colorPicker.value,
-            planningData: planningData,
-            currentDateTime: new Date().toISOString(),
-        };
-
-        await setDoc(docRef, fullStateData);
-        displayMessage("Strategy plan saved to cloud!", false);
-    } catch (e) {
-        console.error("Error saving document:", e);
-        displayMessage("Error saving plan. Check console for details.", true);
-    }
-};
-
-/**
- * Sets up a real-time listener to load data for the authenticated user.
- */
-const loadStrategyData = (userId) => {
-    // Import Firestore functions dynamically (required for module script context)
-    const { onSnapshot } = window.firebase; 
-    
-    if (unsubscribeStrategyData) {
-        unsubscribeStrategyData(); 
-    }
-
-    if (!db || !userId) return;
-
-    const docRef = doc(db, `artifacts/${appId}/users/${userId}/strategy_plans`, 'current_plan');
-
-    unsubscribeStrategyData = onSnapshot(docRef, (docSnap) => {
-        if (docSnap.exists()) {
-            const data = docSnap.data();
-            console.log("Plan loaded from Firestore:", data);
-            
-            restoreImportedState(data, true); // Restore state from cloud data
-            
-            // Reset history after loading a fresh state from the cloud
-            history = [];
-            historyIndex = -1;
-            saveState(); // Save the initial loaded cloud state to history
-            
-            displayMessage(`Plan for ${data.sectorName} loaded successfully! Last saved: ${new Date(data.currentDateTime).toLocaleTimeString()}`, false);
-        } else {
-            console.log("No saved plan found for this user. Applying default state.");
-            // Force a map/sector change to initialize the default empty state
-            mapSelect.dispatchEvent(new Event('change')); 
-            displayMessage("No previous plan found. Start a new one!", true);
+function checkLogin() {
+    if (isLoggedIn) {
+        loginContainer.classList.add('hidden');
+        appWrapper.classList.remove('hidden');
+        // Initial map load upon successful login
+        if (!mapLoaded) { 
+             mapSelect.dispatchEvent(new Event('change')); 
         }
-    }, (e) => {
-        console.error("Firestore Listener Error:", e.message);
-        displayMessage("Error loading plan from cloud.", true);
-    });
-};
+    } else {
+        loginContainer.classList.remove('hidden');
+        appWrapper.classList.add('hidden');
+    }
+}
 
-// --- AUTHENTICATION HANDLERS ---
-// (Logic simplified for brevity, assuming Firebase functions are imported)
-
-const toggleView = () => {
-    isLoginView = !isLoginView;
-    authTitle.textContent = isLoginView ? 'Member Login' : 'Create Account';
-    authActionBtn.textContent = isLoginView ? 'Log In' : 'Create Account';
-    authToggleBtn.textContent = isLoginView 
-        ? "Don't have an account? Sign Up now."
-        : "Back to Login";
-    
-    passwordHint.classList.toggle('hidden', isLoginView);
-    clearMessages();
-};
-
-const handleAuthAction = async (e) => {
+/**
+ * Handles the submission of the login form.
+ */
+const handleLoginAction = (e) => {
     e.preventDefault();
-    clearMessages();
+    clearLoginMessages();
     
-    const { signInWithEmailAndPassword, createUserWithEmailAndPassword } = window.firebase;
-    const email = authEmail.value;
-    const password = authPassword.value;
+    const username = usernameInput.value;
+    const password = passwordInput.value;
 
-    if (!auth || !email || !password) return;
-
-    try {
-        if (isLoginView) {
-            await signInWithEmailAndPassword(auth, email, password);
-            displayMessage("Login successful!", false);
-        } else {
-            if (password.length < 6) return displayMessage("Password must be at least 6 characters long.", true);
-            await createUserWithEmailAndPassword(auth, email, password);
-            displayMessage("Account created and logged in successfully!", false);
-        }
-        authEmail.value = '';
-        authPassword.value = '';
-    } catch (e) {
-        let errorMsg = e.message;
-        if (e.code === 'auth/user-not-found' || e.code === 'auth/wrong-password') errorMsg = 'Invalid credentials.';
-        else if (e.code === 'auth/email-already-in-use') errorMsg = 'This email is already registered.';
-        else if (e.code === 'auth/weak-password') errorMsg = 'Password is too weak (min 6 characters).';
-        displayMessage(errorMsg, true);
+    if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
+        isLoggedIn = true;
+        checkLogin();
+        passwordInput.value = ''; 
+    } else {
+        displayMessage("Invalid username or password. Please use admin/12321.", true);
     }
 };
 
-const handleLogout = async () => {
-    const { signOut, signInAnonymously } = window.firebase;
-    if (auth) {
-        try {
-            await signOut(auth);
-            if (unsubscribeStrategyData) { unsubscribeStrategyData(); unsubscribeStrategyData = null; }
-            await signInAnonymously(auth); // Sign back in anonymously
-            clearMessages();
-        } catch (e) { console.error("Logout failed:", e); }
-    }
+/**
+ * Logs the user out and shows the login screen.
+ */
+const handleLogout = () => {
+    isLoggedIn = false;
+    // Clear the password field for the next login attempt
+    passwordInput.value = '';
+    // Optional: clear the session/local storage data if you were using it
+    // clearStrategyDataLocally(); 
+    checkLogin();
 };
 
+
+// Removed Firebase functions: saveStrategyData, loadStrategyData, initFirebase, etc.
 
 // =========================================================================
 // 1. PLANNER CORE LOGIC (Draw, Move, Sequence, History)
-// (NOTE: Full implementation is too long, key functions are retained)
+// (NOTE: Placeholder functions remain, assuming they are fully implemented 
+// in your original script outside the Firebase sections)
 // =========================================================================
 
 function drawSingleIcon(icon) {
@@ -435,7 +339,7 @@ function synchronousRedraw() {
 }
 
 function saveState() {
-    // ... (Full saveState logic, now uses planningData alias) ...
+    // ... (Full saveState logic, now relies only on local history) ...
     if (!mapLoaded) return;
     if (history.length >= MAX_HISTORY_SIZE) { history.shift(); historyIndex--; }
     if (historyIndex < history.length - 1) { history = history.slice(0, historyIndex + 1); }
@@ -452,7 +356,7 @@ function saveState() {
 }
 
 function restoreState() {
-    // ... (Full restoreState logic, now uses planningData alias) ...
+    // ... (Full restoreState logic) ...
     if (!mapLoaded || historyIndex < 0 || historyIndex >= history.length) return;
     const state = history[historyIndex];
     
@@ -476,8 +380,7 @@ function restoreState() {
 function undo() { if (historyIndex > 0) { historyIndex--; restoreState(); } }
 function redo() { if (historyIndex < history.length - 1) { historyIndex++; restoreState(); } }
 
-// ... (Other planner functions like handleGlobalDraw, updateCursor, etc.) ...
-// Placeholder for brevity, assuming the full code contains these:
+// Placeholder functions for the rest of the planner logic (you keep your original implementations here)
 function getIconAtCoords(x, y) { /* ... */ return null; }
 function updateBrushPreview(x, y, size, color, isEraser, visible) { /* ... */ }
 function startInteraction(e) { /* ... */ }
@@ -501,7 +404,7 @@ function populateUtilitySelector() { /* ... */ }
 function populateVehicleSelector() { /* ... */ }
 function initializeSequenceData(mapKey) { /* ... */ }
 
-// Function to restore the full state from imported/cloud data
+// The restoreImportedState function is modified to only deal with file imports, not cloud loads
 function restoreImportedState(importState, isCloudLoad = false) {
     if (!importState.planningData) { console.error('Invalid plan data structure in file.'); return; }
 
@@ -536,83 +439,43 @@ function restoreImportedState(importState, isCloudLoad = false) {
 
 
 // =========================================================================
-// 2. FIREBASE & INITIALIZATION
+// 2. INITIALIZATION
 // =========================================================================
 
-const initFirebase = () => {
-    // Load Firebase functions from window (as imported in the HTML)
-    const { initializeApp, getAuth, signInAnonymously, onAuthStateChanged, getFirestore } = window.firebase;
+const initializeApp = () => {
+    
+    // --- Attach Login/Logout Listeners (New) ---
+    loginForm.addEventListener('submit', handleLoginAction);
+    logoutButton.addEventListener('click', handleLogout); 
+    // The "Save Plan" button is now non-functional since Firebase was removed
+    // savePlanBtn.addEventListener('click', () => { displayMessage("Cloud save disabled.", true); });
 
-    try {
-        const app = initializeApp(USER_PROVIDED_FIREBASE_CONFIG);
-        auth = getAuth(app);
-        db = getFirestore(app);
-        // setLogLevel('Debug'); // Enable for debugging
-        
-        const attemptAuth = async () => { await signInAnonymously(auth); };
-        
-        onAuthStateChanged(auth, (user) => {
-            if (user && !user.isAnonymous) {
-                authUi.classList.add('hidden');
-                mainWrapper.classList.remove('hidden');
-                loggedInUserIdDisplay.textContent = user.email;
-                loadStrategyData(user.uid); 
-                savePlanBtn.disabled = false;
-                savePlanBtn.textContent = 'Save Plan to Cloud';
-            } else if (user && user.isAnonymous) {
-                authUi.classList.remove('hidden');
-                mainWrapper.classList.add('hidden');
-                anonUserIdDisplay.textContent = user.uid || 'N/A';
-                savePlanBtn.disabled = true;
-                savePlanBtn.textContent = 'Save Plan (Login Required)';
-                if (unsubscribeStrategyData) { unsubscribeStrategyData(); unsubscribeStrategyData = null; }
-                // For anonymous users, load the default local state
-                if (history.length === 0) { mapSelect.dispatchEvent(new Event('change')); }
-            } else {
-                authUi.classList.remove('hidden');
-                mainWrapper.classList.add('hidden');
-            }
-        });
-
-        attemptAuth();
-        
-        // --- Attach Planner Event Listeners ---
-        authForm.addEventListener('submit', handleAuthAction);
-        authToggleBtn.addEventListener('click', toggleView);
-        logoutBtn.addEventListener('click', handleLogout);
-        savePlanBtn.addEventListener('click', () => {
-            const user = auth.currentUser;
-            if (user && !user.isAnonymous) { saveStrategyData(user.uid); }
-            else { displayMessage("Please log in with a permanent account to save your plan.", true); }
-        });
-        
-        // ... (All other event listeners for map, sector, tools, drawing, etc.) ...
-        // Placeholder for brevity, assuming the full code contains all event listeners
-        mapSelect.addEventListener('change', (e) => { /* ... */ });
-        sectorSelect.addEventListener('change', (e) => { /* ... */ });
-        sequenceSelect.addEventListener('change', (e) => { /* ... */ });
-        toolButtons.forEach(button => { button.addEventListener('click', (e) => { /* ... */ }); });
-        canvas.addEventListener('mousedown', startInteraction);
-        canvas.addEventListener('touchstart', startInteraction);
-        // ... (The rest of the listeners) ...
-        
-    } catch (e) {
-        displayMessage(`Firebase Init Error: ${e.message}`, true);
-    }
+    // --- Attach Planner Event Listeners (Keep all of your original listeners here) ---
+    // Placeholder listeners shown below:
+    mapSelect.addEventListener('change', (e) => { /* ... map change logic ... */ });
+    sectorSelect.addEventListener('change', (e) => { /* ... sector change logic ... */ });
+    sequenceSelect.addEventListener('change', (e) => { /* ... sequence change logic ... */ });
+    toolButtons.forEach(button => { button.addEventListener('click', (e) => { /* ... tool switch logic ... */ }); });
+    canvas.addEventListener('mousedown', startInteraction);
+    canvas.addEventListener('touchstart', startInteraction);
+    // ... (The rest of the listeners) ...
+    
+    // Initial check: if isLoggedIn is false, the login screen will show.
+    checkLogin(); 
 };
 
 // --- Initial Setup Calls ---
 document.addEventListener('DOMContentLoaded', () => {
     // Initial setup functions
     currentColor = hexToRgba(colorPicker.value, 0.8);
-    // preloadUtilityImages(); // If this is external, it should be kept
-    populateVehicleSelector(); 
+    // preloadUtilityImages(); 
+    populateVehicleSelector();  
     populateMapSelector();
     populateOperatorSelector();
-    populateUtilitySelector(); 
+    populateUtilitySelector();  
     
-    // The main app logic starts here:
-    // This is moved to the HTML's <script> block to handle the module imports.
+    // Call the main initialization function
+    initializeApp();
 });
 
 window.addEventListener('load', () => { resizeCanvas(); });
@@ -621,6 +484,4 @@ window.addEventListener('resize', () => {
     window.resizeTimeout = setTimeout(resizeCanvas, 100);
 });
 
-// Export the Firebase init function so the HTML can call it after imports
-window.initFirebaseApp = initFirebase;
-
+// window.initFirebaseApp = initFirebase; // REMOVED
