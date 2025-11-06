@@ -5,174 +5,213 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Delta Force Tactical Planner</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
     
-    <style>
-        :root {
-            --primary: #1d9bf0;
-            --secondary: #2e4964;
-            --background: #0d1117;
-            --card: #161b22;
-            --text: #c9d1d9;
-        }
-
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: var(--background);
-        }
-        
-        /* Note: Styles specific to the planner (map-container, icon-selector-item, etc.) 
-           are included here to maintain the visual fidelity of the application. */
-
-        .map-container {
-            position: relative;
-            background-color: var(--card);
-            border-radius: 0.75rem;
-            overflow: hidden;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-        }
-        
-        #map-card-wrapper {
-            position: relative;
-            width: 100%;
-            height: 0;
-            border-radius: 0.75rem;
-            overflow: hidden;
-        }
-
-        .map-canvas, #map-background {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            user-select: none;
-            touch-action: none;
-        }
-
-        .map-canvas { z-index: 20; }
-        #map-background { z-index: 10; object-fit: cover; }
-        #brush-preview { mix-blend-mode: difference; box-sizing: border-box; background-color: transparent; border-radius: 50%; pointer-events: none; transition: none; }
-
-        .icon-selector-item {
-            width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
-            font-weight: 700; font-size: 20px; cursor: pointer; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
-            transition: transform 0.1s; border: 3px solid transparent;
-        }
-        .icon-selector-item:hover { transform: scale(1.1); }
-        .icon-selector-item.selected { border-color: var(--primary); transform: scale(1.1); }
-        .active-tool { box-shadow: 0 0 0 3px var(--primary); background-color: #1a71af !important; }
-        .tooltip { visibility: hidden; position: absolute; background-color: #333; color: white; padding: 3px 6px; border-radius: 4px; font-size: 10px; white-space: nowrap; z-index: 50; top: 100%; margin-top: 8px; left: 50%; transform: translateX(-50%); }
-        .tool-button:hover .tooltip { visibility: visible; }
-    </style>
-
     <script>
         tailwind.config = {
             theme: {
                 extend: {
                     colors: {
-                        primary: 'var(--primary)',
-                        secondary: 'var(--secondary)',
-                        background: 'var(--background)',
-                        card: 'var(--card)',
-                        text: 'var(--text)',
+                        primary: '#1d9bf0',
+                        secondary: '#2e4964',
+                        background: '#0d1117',
+                        card: '#161b22',
+                        text: '#c9d1d9',
                     },
                 }
             }
         }
     </script>
 </head>
-<body>
+<body class="bg-background">
 
-    <div id="app-container" class="min-h-screen flex flex-col items-center justify-center p-4">
+    <div id="login-container" class="fixed inset-0 bg-background flex items-center justify-center z-50">
+        <div class="bg-card p-8 rounded-xl shadow-2xl w-full max-w-md border border-secondary">
+            <h2 class="text-3xl font-extrabold text-primary mb-6 text-center">🔐 Access Required</h2>
+            
+            <div id="login-message-box" class="hidden p-3 mb-4 rounded-lg text-sm text-center bg-red-700 text-white" role="alert">
+                Invalid credentials.
+            </div>
 
-        <div id="auth-ui" class="w-full max-w-xs p-5 bg-card shadow-2xl rounded-xl border border-secondary transition-opacity duration-300">
-            <h3 id="auth-title" class="text-2xl font-bold text-text mb-5 text-center">Member Login</h3>
-            <div id="auth-message-box" class="hidden p-3 mb-4 text-sm font-medium rounded-lg"></div>
-            <form id="auth-form" class="space-y-4">
-                <div><input id="auth-email" type="email" required class="block w-full px-4 py-2 border border-gray-600 rounded-md shadow-sm text-sm bg-gray-700 text-text placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary" placeholder="Username (Email)"/></div>
-                <div><input id="auth-password" type="password" required class="block w-full px-4 py-2 border border-gray-600 rounded-md shadow-sm text-sm bg-gray-700 text-text placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary" placeholder="Password"/>
-                    <p id="password-hint" class="text-xs text-gray-500 mt-1 hidden">Min 6 characters required.</p></div>
-                <button type="submit" id="auth-action-btn" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-lg text-base font-semibold text-white bg-primary hover:bg-blue-600 transition duration-150 ease-in-out">Log In</button>
-            </form>
-            <div class="mt-4 text-center"><button id="auth-toggle-btn" class="text-sm font-medium text-primary hover:text-blue-400">Don't have an account? Sign Up now.</button></div>
-            <p class="text-xs text-gray-500 text-center mt-4">Logged in as temporary user ID: <span id="anon-user-id" class="break-all">...</span></p>
-        </div>
-
-
-        <div id="main-wrapper" class="pt-0 px-4 sm:px-6 text-text hidden w-full max-w-7xl">
-            <header class="text-center mb-1">
-                <div class="flex justify-between items-center py-2">
-                    <h1 class="text-3xl sm:text-4xl font-extrabold text-primary">Delta Force Tactical Planner</h1>
-                    <button id="logout-btn" class="px-3 py-1 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition">Logout</button>
+            <form id="login-form" class="space-y-4">
+                <div>
+                    <label for="username" class="block text-sm font-medium text-text mb-1">Username</label>
+                    <input type="text" id="username" name="username" required
+                        class="w-full p-3 bg-gray-700 border border-gray-600 rounded-lg text-text focus:ring-primary focus:border-primary"
+                        value="admin" disabled aria-label="Admin Username">
                 </div>
-                <p class="text-secondary mt-1">
+                <div>
+                    <label for="password" class="block text-sm font-medium text-text mb-1">Password</label>
+                    <input type="password" id="password" name="password" required
+                        class="w-full p-3 bg-gray-700 border border-gray-600 rounded-lg text-text focus:ring-primary focus:border-primary">
+                </div>
+                
+                <button type="submit" id="login-button"
+                    class="w-full py-3 px-4 bg-primary text-white font-bold rounded-lg hover:bg-blue-600 transition focus:outline-none focus:ring-4 focus:ring-blue-500/50">
+                    Log In
+                </button>
+            </form>
+            <p class="text-sm text-gray-400 mt-4 text-center">
+                Predefined Account: **admin** / **12321**
+            </p>
+        </div>
+    </div>
+    
+    <div id="app-wrapper" class="hidden">
+        <div id="main-wrapper" class="pt-0 px-4 sm:px-6 text-text">
+            <header class="text-center mb-1">
+                <h1 class="text-3xl sm:text-4xl font-extrabold text-primary">Delta Force Tactical Planner</h1>
+                <p class="text-secondary mt-2">
                     Planning on: <span id="current-map-display" class="font-bold text-white">Loading Map...</span>
                     | Sector: <span id="current-sector-display" class="font-bold text-white">N/A</span>
                 </p>
-                <p class="text-xs text-yellow-400 mt-1">QOL: Use <kbd class="px-1 bg-gray-600 rounded">Ctrl+Z</kbd> (Undo) and <kbd class="px-1 bg-gray-600 rounded">Ctrl+Y</kbd> (Redo)</p>
-                <p class="text-xs text-green-400 mt-1">Logged in as: <span id="logged-in-user-id" class="font-bold break-all">...</span></p>
+                <p class="text-xs text-yellow-400 mt-1">
+                    QOL: Use <kbd class="px-1 bg-gray-600 rounded">Ctrl+Z</kbd> (Undo) and <kbd class="px-1 bg-gray-600 rounded">Ctrl+Y</kbd> (Redo)
+                </p>
             </header>
             
-            <main class="flex flex-col lg:flex-row gap-6 mt-4 lg:items-start">
+            <main class="flex flex-col lg:flex-row gap-6 mt-0 lg:items-start">
                 
-                <div class="lg:w-1/6 w-full bg-card p-4 rounded-xl shadow-lg border border-secondary h-min space-y-4">
+                <div class="lg:w-1/6 w-full bg-card p-3 rounded-xl shadow-lg border border-secondary h-min space-y-3">
                     
-                    <div class="space-y-1.5"><h2 class="text-xl font-semibold border-b border-secondary pb-1">Map Selection</h2><select id="map-select" class="w-full p-1.5 bg-gray-700 border border-gray-600 rounded-lg text-text focus:ring-primary focus:border-primary"></select></div>
-                    <div class="space-y-1.5"><h2 class="text-xl font-semibold border-b border-secondary pb-1">Sector Selection</h2><select id="sector-select" class="w-full p-1.5 bg-gray-700 border border-gray-600 rounded-lg text-text focus:ring-primary focus:border-primary"></select></div>
-                    <div class="space-y-1.5"><h2 class="text-xl font-semibold border-b border-secondary pb-1">Sequence Control</h2><div class="flex gap-2"><select id="sequence-select" class="w-full p-1.5 bg-gray-700 border border-gray-600 rounded-lg text-text focus:ring-primary focus:border-primary"></select></div></div>
-                    
-                    <div class="space-y-1.5"><h2 class="text-xl font-semibold border-b border-secondary pb-1">Operator Placement (6 Operators)</h2><div id="operator-icons" class="flex flex-wrap gap-2 justify-center"></div><p id="placement-hint-operator" class="text-xs text-gray-400 mt-2 hidden text-center">Select icon, then click map.</p></div>
-                    <div class="space-y-1.5"><h2 class="text-xl font-semibold border-b border-secondary pb-1">Utility Placement (3 Items)</h2><div id="utility-icons" class="flex flex-wrap gap-2 justify-center"></div><p id="placement-hint-utility" class="text-xs text-gray-400 mt-2 hidden text-center">Select icon, then click map.</p></div>
-                    <div class="space-y-1.5"><h2 class="text-xl font-semibold border-b border-secondary pb-1">Vehicle Placement (12 Items)</h2><div id="vehicle-icons" class="flex flex-wrap gap-2 justify-center"></div><p id="placement-hint-vehicle" class="text-xs text-gray-400 mt-2 hidden text-center">Select icon, then click map.</p></div>
+                    <div class="space-y-1.5">
+                        <h2 class="text-xl font-semibold border-b border-secondary pb-1">Map Selection</h2>
+                        <select id="map-select" class="w-full p-1.5 bg-gray-700 border border-gray-600 rounded-lg text-text focus:ring-primary focus:border-primary">
+                            </select>
+                    </div>
 
-                    <div class="space-y-1.5"><h2 class="text-xl font-semibold border-b border-secondary pb-1">Text Labeling</h2><input type="text" id="text-input" placeholder="Type label text here..." maxlength="30" class="w-full p-1.5 bg-gray-700 border border-gray-600 rounded-lg text-text focus:ring-primary focus:border-primary"><p id="placement-hint-text" class="text-xs text-gray-400 mt-1 hidden text-center">Type text, then click map.</p></div>
+                    <div class="space-y-1.5">
+                        <h2 class="text-xl font-semibold border-b border-secondary pb-1">Sector Selection</h2>
+                        <select id="sector-select" class="w-full p-1.5 bg-gray-700 border border-gray-600 rounded-lg text-text focus:ring-primary focus:border-primary">
+                            </select>
+                    </div>
                     
-                    <div class="space-y-1.5"><h2 class="text-xl font-semibold border-b border-secondary pb-1">Drawing Tools</h2>
+                    <div class="space-y-1.5">
+                        <h2 class="text-xl font-semibold border-b border-secondary pb-1">Sequence Control</h2>
+                        <div class="flex gap-2">
+                            <select id="sequence-select" class="w-full p-1.5 bg-gray-700 border border-gray-600 rounded-lg text-text focus:ring-primary focus:border-primary">
+                                </select>
+                        </div>
+                    </div>
+                    <div class="space-y-1.5">
+                        <h2 class="text-xl font-semibold border-b border-secondary pb-1">Operator Placement (6 Operators)</h2>
+                        <div id="operator-icons" class="flex flex-wrap gap-2 justify-center">
+                            </div>
+                        <p id="placement-hint-operator" class="text-xs text-gray-400 mt-2 hidden text-center">Click map to place icon.</p>
+                    </div>
+                    
+                    <div class="space-y-1.5">
+                        <h2 class="text-xl font-semibold border-b border-secondary pb-1">Utility Placement (3 Items)</h2>
+                        <div id="utility-icons" class="flex flex-wrap gap-2 justify-center">
+                            </div>
+                        <p id="placement-hint-utility" class="text-xs text-gray-400 mt-2 hidden text-center">Click map to place utility.</p>
+                    </div>
+                    <div class="space-y-1.5">
+                        <h2 class="text-xl font-semibold border-b border-secondary pb-1">Vehicle Placement (12 Items)</h2>
+                        <div id="vehicle-icons" class="flex flex-wrap gap-2 justify-center">
+                            </div>
+                        <p id="placement-hint-vehicle" class="text-xs text-gray-400 mt-2 hidden text-center">Click map to place vehicle.</p>
+                    </div>
+
+                    <div class="space-y-1.5">
+                        <h2 class="text-xl font-semibold border-b border-secondary pb-1">Text Labeling</h2>
+                        <input type="text" id="text-input" placeholder="Type label text here..." maxlength="30"
+                                class="w-full p-1.5 bg-gray-700 border border-gray-600 rounded-lg text-text focus:ring-primary focus:border-primary">
+                        <p id="placement-hint-text" class="text-xs text-gray-400 mt-1 hidden text-center">Click map to place label.</p>
+                    </div>
+                    
+                    <div class="space-y-1.5">
+                        <h2 class="text-xl font-semibold border-b border-secondary pb-1">Drawing Tools</h2>
+                        
                         <div class="mb-2">
                             <label for="tool-select" class="block text-xs font-medium mb-1">Select Tool</label>
                             <div class="grid grid-cols-3 gap-1.5">
-                                <button id="tool-pen" data-tool="pen" class="tool-button p-1.5 bg-primary text-white rounded-lg transition hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-primary active-tool relative">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mx-auto"><path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18.5 13.5l-12-12"/><path d="M2 20l1.5-1.5"/></svg><div class="tooltip">Pen</div>
+                                <button id="tool-pen" data-tool="pen" class="tool-button p-1.5 bg-primary text-white rounded-lg transition hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-primary relative">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mx-auto"><path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18.5 13.5l-12-12"/><path d="M2 20l1.5-1.5"/></svg>
+                                    <div class="tooltip top-full mt-2 left-1/2 -translate-x-1/2">Pen</div>
                                 </button>
                                 <button id="tool-place" data-tool="place" class="tool-button p-1.5 bg-gray-600 text-white rounded-lg transition hover:bg-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-400 relative">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mx-auto"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg><div class="tooltip">Place Icon</div>
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mx-auto"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                                    <div class="tooltip top-full mt-2 left-1/2 -translate-x-1/2">Place Icon</div>
                                 </button>
                                 <button id="tool-text" data-tool="text" class="tool-button p-1.5 bg-gray-600 text-white rounded-lg transition hover:bg-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-400 relative">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mx-auto"><polyline points="4 7 4 4 20 4 20 7"></polyline><line x1="9" y1="20" x2="15" y2="20"></line><line x1="12" y1="4" x2="12" y2="20"></line></svg><div class="tooltip">Place Text</div>
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mx-auto"><polyline points="4 7 4 4 20 4 20 7"></polyline><line x1="9" y1="20" x2="15" y2="20"></line><line x1="12" y1="4" x2="12" y2="20"></line></svg>
+                                    <div class="tooltip top-full mt-2 left-1/2 -translate-x-1/2">Place Text</div>
                                 </button>
                                 <button id="tool-move" data-tool="move" class="tool-button p-1.5 bg-gray-600 text-white rounded-lg transition hover:bg-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-400 relative">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mx-auto"><path d="M5 9l-3 3 3 3"/><path d="M22 12h-8M19 5l3 3-3 3"/><path d="M12 2v20"/><path d="M5 15l-3-3 3-3"/></svg><div class="tooltip">Move Icon/Text</div>
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mx-auto"><path d="M5 9l-3 3 3 3"/><path d="M22 12h-8M19 5l3 3-3 3"/><path d="M12 2v20"/><path d="M5 15l-3-3 3-3"/></svg>
+                                    <div class="tooltip top-full mt-2 left-1/2 -translate-x-1/2">Move Icon/Text</div>
                                 </button>
                                 <button id="tool-eraser" data-tool="eraser" class="tool-button p-1.5 bg-gray-600 text-white rounded-lg transition hover:bg-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-400 relative">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mx-auto"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12c1.1 0 2-.9 2-2V8l-6-6z"/><path d="M14 2v6h6"/></svg><div class="tooltip">Eraser (Lines Only)</div>
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mx-auto"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12c1.1 0 2-.9 2-2V8l-6-6z"/><path d="M14 2v6h6"/></svg>
+                                    <div class="tooltip top-full mt-2 left-1/2 -translate-x-1/2">Eraser (Lines Only)</div>
                                 </button>
                             </div>
                         </div>
 
-                        <div class="mb-4"><label for="line-width" class="block text-xs font-medium mb-1">Brush/Eraser Size</label><input type="range" id="line-width" min="2" max="30" value="8" class="w-full h-1.5 bg-secondary rounded-lg appearance-none cursor-pointer range-lg"><span id="width-display" class="text-xs mt-1 block text-right">8px</span></div>
-                        <div><label for="color-picker" class="block text-xs font-medium mb-1">Stroke/Text Color</label><input type="color" id="color-picker" value="#ff0000" class="w-full h-8 p-1 border border-secondary rounded-lg cursor-pointer"></div>
+                        <div class="mb-4">
+                            <label for="line-width" class="block text-xs font-medium mb-1">Brush/Eraser Size</label>
+                            <input type="range" id="line-width" min="2" max="30" value="8" class="w-full h-1.5 bg-secondary rounded-lg appearance-none cursor-pointer range-lg">
+                            <span id="width-display" class="text-xs mt-1 block text-right">8px</span>
+                        </div>
+
+                        <div>
+                            <label for="color-picker" class="block text-xs font-medium mb-1">Stroke/Text Color</label>
+                            <input type="color" id="color-picker" value="#ff0000" class="w-full h-8 p-1 border border-secondary rounded-lg cursor-pointer">
+                        </div>
                     </div>
 
                     <div class="pt-4 border-t border-secondary space-y-2">
-                        <div class="grid grid-cols-2 gap-2"><button id="undo-button" class="py-1 px-2 bg-gray-700 text-white font-semibold rounded-lg hover:bg-gray-600 transition focus:outline-none focus:ring-2 focus:ring-gray-400 disabled:opacity-50 text-xs" disabled>Undo (Z)</button><button id="redo-button" class="py-1 px-2 bg-gray-700 text-white font-semibold rounded-lg hover:bg-gray-600 transition focus:outline-none focus:ring-2 focus:ring-gray-400 disabled:opacity-50 text-xs" disabled>Redo (Y)</button></div>
-                        <div class="grid grid-cols-2 gap-2"><button id="export-data" class="w-full py-1 px-2 bg-purple-700 text-white font-semibold rounded-lg hover:bg-purple-600 transition focus:outline-none focus:ring-2 focus:ring-purple-500 text-xs">Export Plan (JSON)</button><button id="import-data" class="w-full py-1 px-2 bg-indigo-700 text-white font-semibold rounded-lg hover:bg-indigo-600 transition focus:outline-none focus:ring-2 focus:ring-indigo-500 text-xs">Import Plan (JSON)</button></div>
-                        <div class="grid grid-cols-2 gap-2"><button id="clear-lines" class="w-full py-1 px-2 bg-yellow-700 text-white font-semibold rounded-lg hover:bg-yellow-600 transition focus:outline-none focus:ring-2 focus:ring-yellow-500 text-xs">Clear Lines</button><button id="clear-map" class="w-full py-1 px-2 bg-red-700 text-white font-semibold rounded-lg hover:bg-red-600 transition focus:outline-none focus:ring-2 focus:ring-red-500 text-xs">Clear ALL</button></div>
-                        <button id="save-plan-btn" class="w-full py-2 px-2 bg-green-700 text-white font-semibold rounded-lg hover:bg-green-600 transition focus:outline-none focus:ring-2 focus:ring-green-500 text-base">Save Plan to Cloud</button>
-                        <button id="save-map" class="w-full py-1 px-2 bg-gray-700 text-white font-semibold rounded-lg hover:bg-gray-600 transition focus:outline-none focus:ring-2 focus:ring-gray-500 text-xs">Save Image (Local)</button>
+                        <div class="grid grid-cols-2 gap-2">
+                            <button id="undo-button" class="py-1 px-2 bg-gray-700 text-white font-semibold rounded-lg hover:bg-gray-600 transition focus:outline-none focus:ring-2 focus:ring-gray-400 disabled:opacity-50 text-xs" disabled>
+                                Undo (Z)
+                            </button>
+                            <button id="redo-button" class="py-1 px-2 bg-gray-700 text-white font-semibold rounded-lg hover:bg-gray-600 transition focus:outline-none focus:ring-2 focus:ring-gray-400 disabled:opacity-50 text-xs" disabled>
+                                Redo (Y)
+                            </button>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-2">
+                            <button id="export-data" class="w-full py-1 px-2 bg-purple-700 text-white font-semibold rounded-lg hover:bg-purple-600 transition focus:outline-none focus:ring-2 focus:ring-purple-500 text-xs">
+                                Export Plan (JSON)
+                            </button>
+                            <button id="import-data" class="w-full py-1 px-2 bg-indigo-700 text-white font-semibold rounded-lg hover:bg-indigo-600 transition focus:outline-none focus:ring-2 focus:ring-indigo-500 text-xs">
+                                Import Plan (JSON)
+                            </button>
+                        </div>
+                        
+                        <div class="grid grid-cols-2 gap-2">
+                            <button id="clear-lines" class="w-full py-1 px-2 bg-yellow-700 text-white font-semibold rounded-lg hover:bg-yellow-600 transition focus:outline-none focus:ring-2 focus:ring-yellow-500 text-xs">
+                                Clear Lines
+                            </button>
+                            <button id="clear-map" class="w-full py-1 px-2 bg-red-700 text-white font-semibold rounded-lg hover:bg-red-600 transition focus:outline-none focus:ring-2 focus:ring-red-500 text-xs">
+                                Clear ALL
+                            </button>
+                        </div>
+                        
+                        <button id="save-map" class="w-full py-1 px-2 bg-green-700 text-white font-semibold rounded-lg hover:bg-green-600 transition focus:outline-none focus:ring-2 focus:ring-green-500 text-xs">
+                                Save Image
+                        </button>
                         <p class="text-xs text-gray-400 text-center">Saves the plan (Map + Drawings)</p>
+
+                        <button id="logout-button" class="w-full py-2 px-2 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-500 transition focus:outline-none focus:ring-2 focus:ring-red-400 text-sm">
+                            Log Out
+                        </button>
                     </div>
 
                 </div>
 
                 <div class="lg:w-5/6 w-full" style="position: relative;">
-                    <div id="map-card-wrapper" class="map-card-container">
+                    
+                    <div id="map-card-wrapper" class="map-card-container" style="border-radius: 0.75rem;">
                         <div class="map-container" id="map-container">
                             <img id="map-background" class="w-full h-full object-contain rounded-xl" alt="Delta Force Map" />
                             <canvas id="drawing-canvas" class="map-canvas rounded-xl"></canvas>
-                            <div id="trash-can" class="absolute bottom-4 right-4 p-3 bg-red-700/80 rounded-full shadow-lg transition-all duration-200 z-40 hidden opacity-0 border border-red-900" title="Drag icon here to delete">
+                            <div id="trash-can" class="absolute bottom-4 right-4 p-3 bg-red-700/80 rounded-full shadow-lg transition-all duration-200 z-40 hidden opacity-0 border border-red-900"
+                                title="Drag icon here to delete">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-white">
-                                    <polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                    <polyline points="3 6 5 6 21 6"></polyline>
+                                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
                                 </svg>
                             </div>
                         </div>
@@ -181,48 +220,41 @@
 
             </main>
         </div>
-    </div>
-    
-    <div id="brush-preview" class="fixed rounded-full pointer-events-none transition-opacity duration-100 ease-out hidden" style="border: 2px solid; z-index: 1000; top: 0; left: 0;"></div>
-    <div id="custom-modal" class="fixed inset-0 bg-black bg-opacity-75 hidden items-center justify-center z-50">
-        <div class="bg-card p-6 rounded-xl shadow-2xl w-full max-w-sm border border-secondary">
-            <p id="modal-message" class="text-lg mb-6 text-text font-semibold">Are you sure you want to clear all drawings? This cannot be undone.</p>
-            <div class="flex justify-end space-x-3"><button id="modal-cancel" class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-500 transition">Cancel</button><button id="modal-confirm" class="px-4 py-2 bg-red-700 text-white font-semibold rounded-lg hover:bg-red-600 transition">Clear</button></div>
+        
+        <div id="brush-preview" class="fixed rounded-full pointer-events-none transition-opacity duration-100 ease-out hidden"
+            style="border: 2px solid; z-index: 1000; top: 0; left: 0;">
         </div>
-    </div>
-    <div id="import-modal" class="fixed inset-0 bg-black bg-opacity-75 hidden items-center justify-center z-50">
-        <div class="bg-card p-6 rounded-xl shadow-2xl w-full max-w-lg border border-secondary">
-            <h2 class="text-xl font-bold mb-4 text-primary">Import Strategy Plan (Select JSON File)</h2>
-            <p class="text-sm text-text mb-4">Select the **.json** file you previously exported.</p>
-            <input type="file" id="import-file-input" accept=".json" class="w-full p-2 bg-gray-700 border border-gray-600 rounded-lg text-text file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-white hover:file:bg-blue-600"/>
-            <div class="flex justify-end space-x-3 mt-6"><button id="import-modal-cancel" class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-500 transition">Cancel</button><button id="import-modal-action" class="px-4 py-2 bg-indigo-700 text-white font-semibold rounded-lg hover:bg-indigo-600 transition" disabled>Load Plan</button></div>
-        </div>
-    </div>
 
-    <script type="module">
-        // Expose Firebase functions globally for use in the separate script file
-        import * as firebaseApp from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import * as firebaseAuth from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import * as firebaseFirestore from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-        
-        window.firebase = {
-            ...firebaseApp,
-            ...firebaseAuth,
-            ...firebaseFirestore
-        };
-        
-        // Import your application logic
-        import './script.js'; 
-        
-        // Start the application after DOM is ready and modules are loaded
-        document.addEventListener('DOMContentLoaded', () => {
-            if (window.initFirebaseApp) {
-                window.initFirebaseApp();
-            } else {
-                console.error("Firebase initialization function not found in script.js.");
-            }
-        });
-    </script>
+        <div id="custom-modal" class="fixed inset-0 bg-black bg-opacity-75 hidden items-center justify-center z-50">
+            <div class="bg-card p-6 rounded-xl shadow-2xl w-full max-w-sm border border-secondary">
+                <p id="modal-message" class="text-lg mb-6 text-text font-semibold">Are you sure you want to clear all drawings? This cannot be undone.</p>
+                <div class="flex justify-end space-x-3">
+                    <button id="modal-cancel" class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-500 transition">
+                        Cancel
+                    </button>
+                    <button id="modal-confirm" class="px-4 py-2 bg-red-700 text-white font-semibold rounded-lg hover:bg-red-600 transition">
+                        Clear
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div id="import-modal" class="fixed inset-0 bg-black bg-opacity-75 hidden items-center justify-center z-50">
+            <div class="bg-card p-6 rounded-xl shadow-2xl w-full max-w-lg border border-secondary">
+                <h2 class="text-xl font-bold mb-4 text-primary">Import Strategy Plan (Select JSON File)</h2>
+                <p class="text-sm text-text mb-4">Select the **.json** file you previously exported.</p>
+                <input type="file" id="import-file-input" accept=".json" class="w-full p-2 bg-gray-700 border border-gray-600 rounded-lg text-text file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-white hover:file:bg-blue-600"/>
+                <div class="flex justify-end space-x-3 mt-6">
+                    <button id="import-modal-cancel" class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-500 transition">
+                        Cancel
+                    </button>
+                    <button id="import-modal-action" class="px-4 py-2 bg-indigo-700 text-white font-semibold rounded-lg hover:bg-indigo-600 transition" disabled>
+                        Load Plan
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div> <script type="module" src="script.js"></script>
 
 </body>
 </html>
