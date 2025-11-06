@@ -6,63 +6,63 @@ const MAPS = [
     { 
         name: "Trenchline", 
         sectors: [
-            { name: "A", url: './TrenchlineA' }, 
-            { name: "B", url: './TrenchlineB' }, 
-            { name: "C", url: './TrenchlineC' }, 
-            { name: "D", url: './TrenchlineD' },
-            { name: "E", url: './TrenchlineE' }
+            { name: "A", url: './TrenchlineA.png' }, 
+            { name: "B", url: './TrenchlineB.png' }, 
+            { name: "C", url: './TrenchlineC.png' }, 
+            { name: "D", url: './TrenchlineD.png' },
+            { name: "E", url: './TrenchlineE.png' }
         ]
     },
     { 
         name: "Ascension", 
         sectors: [
-            { name: "A", url: './ascensiona' },
-            { name: "B", url: './ascensionb' },
-            { name: "C", url: './ascensionc' },
-            { name: "D", url: './ascenciond' }
+            { name: "A", url: './ascensiona.png' },
+            { name: "B", url: './ascensionb.png' },
+            { name: "C", url: './ascensionc.png' },
+            { name: "D", url: './ascenciond.png' }
         ]
     },
     { 
         name: "Cracked", 
         sectors: [
-            { name: "A", url: './crackeda' },
-            { name: "B", url: './crackedb' },
-            { name: "C", url: './crackedc' }
+            { name: "A", url: './crackeda.png' },
+            { name: "B", url: './crackedb.png' },
+            { name: "C", url: './crackedc.png' }
         ]
     },
     { 
         name: "Threshold", 
         sectors: [
-            { name: "A", url: './thresholda' },
-            { name: "B", url: './thresholdb' },
-            { name: "C", url: './thresholdc' }
+            { name: "A", url: './thresholda.png' },
+            { name: "B", url: './thresholdb.png' },
+            { name: "C", url: './thresholdc.png' }
         ]
     },
     { 
         name: "Cyclone", 
         sectors: [
-            { name: "A", url: './cyclonea' },
-            { name: "B", url: './cycloneb' },
-            { name: "C", url: './cyclonec' },
-            { name: "D", url: './cycloned' },
-            { name: "E", url: './cyclonee' }
+            { name: "A", url: './cyclonea.png' },
+            { name: "B", url: './cycloneb.png' },
+            { name: "C", url: './cyclonec.png' },
+            { name: "D", url: './cycloned.png' },
+            { name: "E", url: './cyclonee.png' }
         ]
     },
     { 
         name: "Fault", 
         sectors: [
-            { name: "A", url: './faulta' },
-            { name: "B", url: './faultb' },
-            { name: "C", url: './faultc' }
+            { name: "A", url: './faulta.png' },
+            { name: "B", url: './faultb.png' },
+            { name: "C", url: './faultc.png' }
         ]
     },
     { 
         name: "Trainwreck", 
         sectors: [
-            { name: "A", url: './trainwrecka' },
-            { name: "B", url: './trainwreckb' },
-            { name: "C", url: './trainwreckc' },
-            { name: "D", url: './trainwreckd' }
+            { name: "A", url: './trainwrecka.png' },
+            { name: "B", url: './trainwreckb.png' },
+            { name: "C", url: './trainwreckc.png' },
+            { name: "D", url: './trainwreckd.png' }
         ]
     },
 ];
