@@ -4,13 +4,14 @@
 
 // --- IMPORTANT: Replace this config with your actual Firebase project config ---
 const FIREBASE_CONFIG = {
-    apiKey: "YOUR_API_KEY",
-    authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-    databaseURL: "https://YOUR_PROJECT_ID-default-rtdb.firebaseio.com",
-    projectId: "YOUR_PROJECT_ID",
-    storageBucket: "YOUR_PROJECT_ID.appspot.com",
-    messagingSenderId: "YOUR_SENDER_ID",
-    appId: "YOUR_APP_ID"
+  apiKey: "AIzaSyDx7EopChu9ChjvY-XHq52Zry0thXJ5aMo",
+  authDomain: "deltaplant-14bbb.firebaseapp.com",
+  databaseURL: "https://deltaplant-14bbb-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "deltaplant-14bbb",
+  storageBucket: "deltaplant-14bbb.firebasestorage.app",
+  messagingSenderId: "1086316459831",
+  appId: "1:1086316459831:web:175f5aa4630b3f161a8cb2",
+  measurementId: "G-NHN46CYTVN"
 };
 
 // =========================================================================
@@ -1372,3 +1373,4 @@ window.addEventListener('resize', () => {
 
 // The remaining functions (drawSingleIcon, redrawIcons, redrawText, etc.) 
 // are unchanged from your original script.
+
