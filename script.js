@@ -10,13 +10,14 @@ const FIREBASE_CONFIG = {
   projectId: "deltaplant-14bbb",
   storageBucket: "deltaplant-14bbb.firebasestorage.app",
   messagingSenderId: "1086316459831",
-  appId: "1:1086316459831:web:175f5aa4630b3f161a8cb2",
-  measurementId: "G-NHN46CYTVN"
+  appId: "1:1086316459831:web:175f5aa4630b3f161a8cb2"
 };
 
 // =========================================================================
 // FIREBASE IMPORTS
 // =========================================================================
+
+// (function() { // REMOVE THE IIFE for module compatibility
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { 
@@ -1373,4 +1374,5 @@ window.addEventListener('resize', () => {
 
 // The remaining functions (drawSingleIcon, redrawIcons, redrawText, etc.) 
 // are unchanged from your original script.
+
 
