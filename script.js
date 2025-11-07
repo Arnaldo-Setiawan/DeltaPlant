@@ -24,7 +24,7 @@ const FIREBASE_CONFIG = {
 
 // (function() { // REMOVE THE IIFE for module compatibility
 
-/*import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 console.log("Firebase Config Loaded:", !!FIREBASE_CONFIG.apiKey);
 import { 
     getAuth, 
@@ -39,7 +39,7 @@ import {
     set, 
     update, 
     off 
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";*/
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
 // Initialize Firebase
 const app = initializeApp(FIREBASE_CONFIG);
@@ -1380,6 +1380,7 @@ window.addEventListener('resize', () => {
 
 // The remaining functions (drawSingleIcon, redrawIcons, redrawText, etc.) 
 // are unchanged from your original script.
+
 
 
 
