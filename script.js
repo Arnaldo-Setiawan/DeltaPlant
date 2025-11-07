@@ -1,7 +1,7 @@
 // =========================================================================
 // FIREBASE CONFIGURATION (Replace with your own project configuration!)
 // =========================================================================
-
+console.log("hi");
 // --- IMPORTANT: Replace this config with your actual Firebase project config ---
 const FIREBASE_CONFIG = {
   apiKey: "AIzaSyDx7EopChu9ChjvY-XHq52Zry0thXJ5aMo",
@@ -20,6 +20,7 @@ const FIREBASE_CONFIG = {
 // (function() { // REMOVE THE IIFE for module compatibility
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+console.log("Firebase Config Loaded:", !!FIREBASE_CONFIG.apiKey);
 import { 
     getAuth, 
     signInWithEmailAndPassword, 
@@ -1374,5 +1375,6 @@ window.addEventListener('resize', () => {
 
 // The remaining functions (drawSingleIcon, redrawIcons, redrawText, etc.) 
 // are unchanged from your original script.
+
 
 
