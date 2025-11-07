@@ -1,7 +1,12 @@
-// =========================================================================
-// FIREBASE CONFIGURATION (Replace with your own project configuration!)
-// =========================================================================
-console.log("hi");
+if (window.firebaseAppInitialized) {
+    console.warn("Script defense activated. Exiting duplicate execution.");
+    // This will stop the file from running a second time
+    // if the browser is erroneously loading it twice.
+    throw new Error("Duplicate script execution prevented."); 
+}
+window.firebaseAppInitialized = true;
+
+console.log("test");
 // --- IMPORTANT: Replace this config with your actual Firebase project config ---
 const FIREBASE_CONFIG = {
   apiKey: "AIzaSyDx7EopChu9ChjvY-XHq52Zry0thXJ5aMo",
@@ -1375,6 +1380,7 @@ window.addEventListener('resize', () => {
 
 // The remaining functions (drawSingleIcon, redrawIcons, redrawText, etc.) 
 // are unchanged from your original script.
+
 
 
 
