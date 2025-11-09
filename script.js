@@ -53,6 +53,7 @@ const db = getDatabase(app);
 // =========================================================================
 
 // FIX: Declaring Image objects globally to prevent ReferenceError
+// The correct syntax for global constant declaration
 const currentMapImage = new Image(); 
 currentMapImage.crossOrigin = "Anonymous"; 
 
@@ -1222,7 +1223,7 @@ function exportPlan() {
             const url = URL.createObjectURL(blob);
 
             const link = document.createElement('a');
-            const filename = `df_plan_${MAPS[currentMapIndex].name.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_${currentSectorName.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.json`;
+            const filename = `df_plan_image_${MAPS[currentMapIndex].name.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_${currentSectorName.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.json`;
             
             link.download = filename;
             link.href = url;
