@@ -2,7 +2,7 @@
 // 1. FIREBASE IMPORTS (MUST BE THE VERY FIRST EXECUTABLE CODE)
 // =========================================================================
 
-import { initializeDelta } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { 
     getAuth, 
     signInWithEmailAndPassword, 
@@ -1317,7 +1317,7 @@ function restoreImportedState(importState) {
 // 8. EVENT LISTENERS & INITIALIZATION
 // =========================================================================
 
-const initializeApp = () => {
+const initializeDelta = () => {
     
     loginForm.addEventListener('submit', handleLoginAction);
     logoutButton.addEventListener('click', handleLogout); 
@@ -1482,4 +1482,5 @@ window.addEventListener('resize', () => {
     clearTimeout(window.resizeTimeout);
     window.resizeTimeout = setTimeout(resizeCanvas, 100);
 });
+
 
