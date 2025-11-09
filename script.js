@@ -53,7 +53,6 @@ const db = getDatabase(app);
 // =========================================================================
 
 // FIX: Declaring Image objects globally to prevent ReferenceError
-// The correct syntax for global constant declaration
 const currentMapImage = new Image(); 
 currentMapImage.crossOrigin = "Anonymous"; 
 
@@ -1361,6 +1360,7 @@ sequenceSelect.addEventListener('change', (e) => {
 undoButton.addEventListener('click', undo);
 redoButton.addEventListener('click', redo);
 
+// FIX: Drawing issue is likely here: The tool selection or event attachment.
 canvas.addEventListener('mousedown', startInteraction);
 canvas.addEventListener('touchstart', startInteraction);
 
