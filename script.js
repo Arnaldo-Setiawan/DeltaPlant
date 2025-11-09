@@ -270,6 +270,37 @@ const importModalActionButton = document.getElementById('import-modal-action');
 // 4. UTILITY FUNCTIONS
 // =========================================================================
 
+// --- Modal / UI Functions ---
+// FIX: Re-implemented showConfirm and handlers to resolve ReferenceError
+let currentModalCallback = null;
+
+function showConfirm(message, callback, confirmText = "Clear") {
+    modalMessage.textContent = message;
+    modalConfirmButton.textContent = confirmText;
+    currentModalCallback = callback;
+    customModal.classList.add('flex');
+    customModal.classList.remove('hidden');
+}
+
+// Attach event listeners for the confirmation modal
+modalConfirmButton.addEventListener('click', () => {
+    if (currentModalCallback) {
+        currentModalCallback(true);
+    }
+    customModal.classList.add('hidden');
+    customModal.classList.remove('flex');
+    currentModalCallback = null;
+});
+
+modalCancelButton.addEventListener('click', () => {
+    if (currentModalCallback) {
+        currentModalCallback(false);
+    }
+    customModal.classList.add('hidden');
+    customModal.classList.remove('flex');
+    currentModalCallback = null;
+});
+
 function displayMessage(message, isError) {
     loginMessageBox.textContent = message;
     loginMessageBox.classList.remove('hidden', 'bg-red-700', 'bg-green-700');
@@ -561,6 +592,7 @@ function startRealtimeSync() {
     
     if (firebaseListener) {
         off(firebaseListener);
+        firebaseListener = null; // FIX: Ensure listener is nulled after off()
     }
 
     const path = `plans/${currentMapKey}`;
@@ -616,6 +648,7 @@ function switchSequence(newSequenceId) {
     
     if (firebaseListener) {
         off(firebaseListener);
+        firebaseListener = null; // FIX: Ensure listener is nulled after off()
     }
     
     currentSequenceId = newSequenceId;
