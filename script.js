@@ -2,6 +2,7 @@
 // 1. FIREBASE IMPORTS (MUST BE THE VERY FIRST EXECUTABLE CODE)
 // =========================================================================
 
+// FIX 1: The imported Firebase function MUST be named initializeApp
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { 
     getAuth, 
@@ -51,6 +52,10 @@ const db = getDatabase(app);
 // =========================================================================
 // 3. CONSTANTS
 // =========================================================================
+
+// FIX 2: Moved image variable declaration to global scope to fix ReferenceError
+let currentMapImage = new Image(); 
+currentMapImage.crossOrigin = "Anonymous"; 
 
 // --- Planner Constants ---
 const ANIMATION_DURATION = 500; // ms
@@ -1482,5 +1487,3 @@ window.addEventListener('resize', () => {
     clearTimeout(window.resizeTimeout);
     window.resizeTimeout = setTimeout(resizeCanvas, 100);
 });
-
-
