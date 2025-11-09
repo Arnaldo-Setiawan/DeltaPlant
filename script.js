@@ -2,7 +2,7 @@
 // 1. FIREBASE IMPORTS (MUST BE THE VERY FIRST EXECUTABLE CODE)
 // =========================================================================
 
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { initializeDelta } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { 
     getAuth, 
     signInWithEmailAndPassword, 
@@ -1474,7 +1474,7 @@ document.addEventListener('DOMContentLoaded', () => {
     populateOperatorSelector();
     populateUtilitySelector();  
     
-    initializeApp();
+    initializeDelta();
 });
 
 window.addEventListener('load', () => { resizeCanvas(); });
@@ -1482,3 +1482,4 @@ window.addEventListener('resize', () => {
     clearTimeout(window.resizeTimeout);
     window.resizeTimeout = setTimeout(resizeCanvas, 100);
 });
+
