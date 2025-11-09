@@ -787,6 +787,7 @@ function handleGlobalDraw(e) {
         return;
     }
     
+    // Check if drawing tool is selected AND drawing is active
     if (!isDrawing || currentTool !== 'pen' && currentTool !== 'eraser') return;
     
     lineBufferCtx.beginPath();
@@ -838,6 +839,7 @@ function startInteraction(e) {
         return;
     }
 
+    // FIX APPLIED HERE: Only proceed if the tool is Pen or Eraser
     if (currentTool === 'pen' || currentTool === 'eraser') {
         isDrawing = true;
         [lastX, lastY] = [x, y];
@@ -947,27 +949,42 @@ function placeIcon(e) {
     }
 }
 
+// FIX: clearLines implementation
 function clearLines() {
     showConfirm("Are you sure you want to clear all drawing lines? All placed icons and labels will remain.", (confirmed) => {
         if (confirmed) {
             lineBufferCtx.clearRect(0, 0, lineBuffer.width, lineBuffer.height);
-            saveToDatabase(false, false, true);
+            
+            // CRITICAL: Clear line data in the current sequence state
+            if (currentSequenceData) {
+                currentSequenceData.lineData = '';
+            }
+
             synchronousRedraw();
+            
+            saveToDatabase(false, false, true);
+            
+            // Reset local history (lines only)
+            history = [{ lineData: '' }];
+            historyIndex = 0;
+            updateUndoRedoButtons();
         }
     }, "Clear Lines");
 }
 
+// FIX: clearDrawing implementation (Clear ALL)
 function clearDrawing(confirm = true, isMapChange = false) {
     const clearAction = () => {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         lineBufferCtx.clearRect(0, 0, lineBuffer.width, lineBuffer.height); 
-        placedIcons.length = 0; 
-        placedText.length = 0; 
+        
+        placedIcons.length = 0;
+        placedText.length = 0;
         
         if (currentSequenceData) {
             currentSequenceData.lineData = ''; 
-            currentSequenceData.icons = []; 
-            currentSequenceData.textData = []; 
+            currentSequenceData.icons.length = 0; 
+            currentSequenceData.textData.length = 0; 
             
             saveToDatabase(true, true, true);
         }
@@ -975,6 +992,9 @@ function clearDrawing(confirm = true, isMapChange = false) {
         if (!isMapChange) {
             history = [];
             historyIndex = -1;
+            // Add a clean state (index 0) to prevent undo button crash
+            history.push({ lineData: '' });
+            historyIndex = 0;
             updateUndoRedoButtons();
         }
     };
