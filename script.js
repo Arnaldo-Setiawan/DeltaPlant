@@ -949,13 +949,12 @@ function placeIcon(e) {
     }
 }
 
-// FIX: clearLines implementation
 function clearLines() {
     showConfirm("Are you sure you want to clear all drawing lines? All placed icons and labels will remain.", (confirmed) => {
         if (confirmed) {
             lineBufferCtx.clearRect(0, 0, lineBuffer.width, lineBuffer.height);
             
-            // CRITICAL: Clear line data in the current sequence state
+            // CRITICAL FIX: Clear line data in the current sequence state
             if (currentSequenceData) {
                 currentSequenceData.lineData = '';
             }
@@ -972,21 +971,22 @@ function clearLines() {
     }, "Clear Lines");
 }
 
-// FIX: clearDrawing implementation (Clear ALL)
 function clearDrawing(confirm = true, isMapChange = false) {
     const clearAction = () => {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         lineBufferCtx.clearRect(0, 0, lineBuffer.width, lineBuffer.height); 
         
+        // CRITICAL FIX: Clear local vector data arrays (aliases)
         placedIcons.length = 0;
         placedText.length = 0;
         
+        // CRITICAL FIX: Clear the properties in the live data object and save to Firebase
         if (currentSequenceData) {
             currentSequenceData.lineData = ''; 
             currentSequenceData.icons.length = 0; 
             currentSequenceData.textData.length = 0; 
             
-            saveToDatabase(true, true, true);
+            saveToDatabase(true, true, true); // Push empty state to Firebase
         }
 
         if (!isMapChange) {
