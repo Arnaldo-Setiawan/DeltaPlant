@@ -41,7 +41,7 @@ const FIREBASE_CONFIG = {
     messagingSenderId: "1086316459831",
     appId: "1:1086316459831:web:175f5aa4630b3f161a8cb2"
 };
-const SHARED_LOGIN_EMAIL = 'admin@deltaforce.com'; 
+const SHARED_LOGIN_EMAIL = 'admin@delta.com'; 
 
 // Initialize Firebase
 const app = initializeApp(FIREBASE_CONFIG);
@@ -1540,3 +1540,4 @@ window.addEventListener('resize', () => {
     clearTimeout(window.resizeTimeout);
     window.resizeTimeout = setTimeout(resizeCanvas, 100);
 });
+
